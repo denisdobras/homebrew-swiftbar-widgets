@@ -1,14 +1,15 @@
 # Charging Wattage — SwiftBar plugin
 
-A tiny SwiftBar plugin that shows the **live wattage** your MacBook is drawing from its power adapter, right in the menu bar.
+A tiny SwiftBar plugin that shows the **live wattage** your MacBook is drawing from its power adapter, right in the menu bar. Uses native macOS **SF Symbols** so it blends into the system UI.
 
 | State | Menu bar shows |
 |---|---|
-| Charging | `⚡ 67.3W` (green) |
-| Plugged in, full | `🔌 100%` |
-| On battery | `🔋 56%` |
+| Charging | `battery.100.bolt` SF Symbol + e.g. `60.1W` in system green |
+| Plugged in, fully charged | `powerplug.fill` SF Symbol + percentage |
+| On battery | Level-aware battery SF Symbol (`battery.0` / `.25` / `.50` / `.75` / `.100`) + percentage |
+| Low battery (< 20 %) | Battery SF Symbol + percentage tinted red |
 
-Click for adapter name, rated wattage, and the negotiated USB-PD profile (volts × amps).
+Click for adapter name, rated wattage, and the negotiated USB-PD profile (volts × amps). Dropdown rows have their own SF Symbols too (`cpu` for system load, `waveform.path` for the negotiated USB-PD profile, `arrow.clockwise` for refresh).
 
 ## Install via Homebrew
 
