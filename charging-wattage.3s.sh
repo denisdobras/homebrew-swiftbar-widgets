@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # <swiftbar.title>Charging Wattage</swiftbar.title>
-# <swiftbar.author>Denis</swiftbar.author>
-# <swiftbar.desc>Shows live wattage drawn from the power adapter.</swiftbar.desc>
-# <swiftbar.version>1.0</swiftbar.version>
+# <swiftbar.author>Denis Dobraš</swiftbar.author>
+# <swiftbar.desc>Live wattage drawn from the power adapter, in the menu bar.</swiftbar.desc>
+# <swiftbar.version>1.1.0</swiftbar.version>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 
@@ -28,6 +28,17 @@ nested () {
     | sed -E "s/^\"$key\"=//; s/^\"//; s/\"$//"
 }
 
+# SF Symbol matching the battery level, à la Control Center
+battery_symbol () {
+  local pct=$1
+  if   [ "$pct" -ge 80 ]; then echo "battery.100"
+  elif [ "$pct" -ge 60 ]; then echo "battery.75"
+  elif [ "$pct" -ge 40 ]; then echo "battery.50"
+  elif [ "$pct" -ge 20 ]; then echo "battery.25"
+  else                         echo "battery.0"
+  fi
+}
+
 ext_connected=$(top ExternalConnected)
 is_charging=$(top IsCharging)
 capacity=$(top CurrentCapacity)
@@ -44,46 +55,51 @@ system_load_mw=$(nested PowerTelemetryData SystemLoad)
 power_in_w=$(awk -v x="${system_power_in_mw:-0}" 'BEGIN {printf "%.1f", x/1000}')
 load_w=$(awk    -v x="${system_load_mw:-0}"     'BEGIN {printf "%.1f", x/1000}')
 
-# ── Menu bar line ───────────────────────────────────────────────
+# ── Menu bar line ──────────────────────────────────────────────
 if [ "$ext_connected" = "Yes" ]; then
   if [ "$is_charging" = "Yes" ]; then
-    printf "⚡ %sW | color=#22c55e\n" "$power_in_w"
+    printf "%sW | sfimage=battery.100.bolt color=#22c55e\n" "$power_in_w"
   else
-    printf "🔌 %s%%\n" "$capacity"
+    printf "%s%% | sfimage=powerplug.fill\n" "$capacity"
   fi
 else
-  printf "🔋 %s%%\n" "$capacity"
+  sym=$(battery_symbol "$capacity")
+  if [ "$capacity" -lt 20 ]; then
+    printf "%s%% | sfimage=%s color=#ef4444\n" "$capacity" "$sym"
+  else
+    printf "%s%% | sfimage=%s\n" "$capacity" "$sym"
+  fi
 fi
 
-# ── Dropdown ────────────────────────────────────────────────────
+# ── Dropdown ───────────────────────────────────────────────────
 echo "---"
-echo "Battery: ${capacity}%"
+echo "Battery: ${capacity}% | sfimage=$(battery_symbol "$capacity")"
 
 if [ "$ext_connected" = "Yes" ]; then
   if [ "$is_charging" = "Yes" ]; then
-    echo "Status: Charging"
+    echo "Status: Charging | sfimage=bolt.fill"
   else
-    echo "Status: Plugged in (not charging)"
+    echo "Status: Plugged in (not charging) | sfimage=powerplug.fill"
   fi
 
   if [ -n "${adapter_watts:-}" ]; then
     label="${adapter_name:-${adapter_desc:-Adapter}}"
-    echo "${label}: ${adapter_watts}W rated"
+    echo "${label}: ${adapter_watts}W rated | sfimage=bolt.batteryblock.fill"
   fi
 
-  echo "Live draw: ${power_in_w} W"
+  echo "Live draw: ${power_in_w} W | sfimage=bolt.horizontal.fill"
 
   if [ -n "${adapter_voltage_mv:-}" ] \
      && [ -n "${adapter_current_ma:-}" ] \
      && [ "$adapter_voltage_mv" != "0" ]; then
     v=$(awk -v x="$adapter_voltage_mv" 'BEGIN {printf "%.1f", x/1000}')
     a=$(awk -v x="$adapter_current_ma" 'BEGIN {printf "%.2f", x/1000}')
-    echo "Negotiated: ${v} V × ${a} A"
+    echo "Negotiated: ${v} V × ${a} A | sfimage=waveform.path"
   fi
 else
-  echo "Status: On battery"
+  echo "Status: On battery | sfimage=$(battery_symbol "$capacity")"
 fi
 
-echo "System load: ${load_w} W"
+echo "System load: ${load_w} W | sfimage=cpu"
 echo "---"
-echo "Refresh | refresh=true"
+echo "Refresh | refresh=true sfimage=arrow.clockwise"
