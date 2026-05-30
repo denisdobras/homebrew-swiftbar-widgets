@@ -1,10 +1,10 @@
 class ChargingWattage < Formula
   desc "SwiftBar plugin showing live charging wattage in the macOS menu bar"
   homepage "https://github.com/denisdobras/homebrew-swiftbar-widgets"
-  url "https://github.com/denisdobras/homebrew-swiftbar-widgets/archive/refs/tags/v1.1.0.tar.gz"
-  sha256 "5020a9b103adbeea6c58ca2051e9cf74363ee23c6abb9d06201d2dc04bd5d0ee"
+  url "https://github.com/denisdobras/homebrew-swiftbar-widgets/archive/refs/tags/v1.2.0.tar.gz"
+  sha256 "REPLACE_AFTER_v1_2_0_TAG"
   license "MIT"
-  version "1.1.0"
+  version "1.2.0"
 
   def install
     (share/"swiftbar-plugins").install "charging-wattage.3s.sh"

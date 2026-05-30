@@ -28,14 +28,16 @@ nested () {
     | sed -E "s/^\"$key\"=//; s/^\"//; s/\"$//"
 }
 
-# SF Symbol matching the battery level, à la Control Center
+# SF Symbol matching the battery level, à la Control Center.
+# Uses the .percent variants (SF Symbols 5+) which match the native
+# macOS menu bar battery indicator — outlined, modern, system-tinted.
 battery_symbol () {
   local pct=$1
-  if   [ "$pct" -ge 80 ]; then echo "battery.100"
-  elif [ "$pct" -ge 60 ]; then echo "battery.75"
-  elif [ "$pct" -ge 40 ]; then echo "battery.50"
-  elif [ "$pct" -ge 20 ]; then echo "battery.25"
-  else                         echo "battery.0"
+  if   [ "$pct" -ge 80 ]; then echo "battery.100percent"
+  elif [ "$pct" -ge 60 ]; then echo "battery.75percent"
+  elif [ "$pct" -ge 40 ]; then echo "battery.50percent"
+  elif [ "$pct" -ge 20 ]; then echo "battery.25percent"
+  else                         echo "battery.0percent"
   fi
 }
 
@@ -56,18 +58,31 @@ power_in_w=$(awk -v x="${system_power_in_mw:-0}" 'BEGIN {printf "%.1f", x/1000}'
 load_w=$(awk    -v x="${system_load_mw:-0}"     'BEGIN {printf "%.1f", x/1000}')
 
 # ── Menu bar line ──────────────────────────────────────────────
+# `symbolize=true` makes SwiftBar swap `:symbol.name:` tokens for the
+# actual SF Symbol image, so we can position the icon *after* the text
+# the way the native macOS battery indicator does.
+#
+# Two independent knobs:
+#   size=N    → percentage TEXT font size
+#   sfsize=N  → the embedded SF Symbol (battery) size, sized separately
+# This is how we get small text next to a larger, clearly-outlined battery
+# glyph that matches the native macOS menu bar indicator.
+TEXT_SIZE=11
+ICON_SIZE=16
+MBAR_STYLE="symbolize=true size=${TEXT_SIZE} sfsize=${ICON_SIZE}"
+
 if [ "$ext_connected" = "Yes" ]; then
   if [ "$is_charging" = "Yes" ]; then
-    printf "%sW | sfimage=battery.100.bolt color=#22c55e\n" "$power_in_w"
+    printf "%sW :battery.100percent.bolt: | %s color=#22c55e\n" "$power_in_w" "$MBAR_STYLE"
   else
-    printf "%s%% | sfimage=powerplug.fill\n" "$capacity"
+    printf "%s%% :battery.100percent.bolt: | %s\n" "$capacity" "$MBAR_STYLE"
   fi
 else
   sym=$(battery_symbol "$capacity")
   if [ "$capacity" -lt 20 ]; then
-    printf "%s%% | sfimage=%s color=#ef4444\n" "$capacity" "$sym"
+    printf "%s%% :%s: | %s color=#ef4444\n" "$capacity" "$sym" "$MBAR_STYLE"
   else
-    printf "%s%% | sfimage=%s\n" "$capacity" "$sym"
+    printf "%s%% :%s: | %s\n" "$capacity" "$sym" "$MBAR_STYLE"
   fi
 fi
 
